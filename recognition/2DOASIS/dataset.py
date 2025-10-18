@@ -1,27 +1,15 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torchvision.transforms as transforms
-from torch.utils.data import Dataset, DataLoader
-import numpy as np
 import os, glob
 from PIL import Image
-import matplotlib.pyplot as plt
+import torch
+from torch.utils.data import Dataset
+import torchvision.transforms as transforms
+import torch.nn.functional as F  # only for one_hot if you ever print/inspect
 
-# Device
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-if not torch.cuda.is_available():
-    print("Warning: CUDA not found. Using CPU.")
-
-# Hyperparameters
+# Hyperparameters that affect transforms
 image_size = 128
-batch_size = 16 # 16 images at a time
-num_epochs = 30
-learning_rate = 1e-6
-num_classes = 3  # 0: background, 1: GM, 2: WM (adjust if needed) # how many colours :)
+num_classes = 3  # 0: background, 1: GM, 2: WM
 
-# Data
-# Transforms for input and segmentation mask
+# Transforms for input and segmentation mask (same as yours)
 img_transform = transforms.Compose([
     transforms.Grayscale(num_output_channels=1),
     transforms.Resize((image_size, image_size)),
@@ -38,7 +26,7 @@ class OASISSegDataset(Dataset):
     Dataset for OASIS MR slices and segmentation masks.
     Assumes image and mask PNGs have matching filenames.
     """
-    def __init__(self, img_dir, seg_dir, img_transform=None, seg_transform=None):
+    def __init__(self, img_dir, seg_dir, img_transform=img_transform, seg_transform=seg_transform):
         self.img_paths = sorted(glob.glob(os.path.join(img_dir, "*.png")))
         self.seg_paths = sorted(glob.glob(os.path.join(seg_dir, "*.png")))
         assert len(self.img_paths) == len(self.seg_paths), "Mismatch in image/mask count"
