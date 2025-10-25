@@ -1,3 +1,11 @@
 OASIS/
 __pycache__/
 .vscode/
+HipMRI_Study_open/
+unet_weights.pth
+results/
+test.ipynb
+unet_hipmri_best.pt
+unet3d_hipmri_best.pt
+2dunet.py 
+3dunet.py
