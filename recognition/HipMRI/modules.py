@@ -109,4 +109,51 @@ class Up3D(nn.Module):
         x = self.res(x)
         return x
 
+# ----------------------------
+# Model
+# ----------------------------
+class ImprovedUNet3D(nn.Module):
+    def __init__(self, in_ch=1, n_classes=6, base=32, dropout=0.1, deep_supervision=False):
+        super().__init__()
+        C = [base, base*2, base*4, base*8, base*16]
+        self.enc1 = Res3D(in_ch, C[0], dropout=0.0)
+        self.enc2 = Res3D(C[0], C[1], dropout=dropout*0.25)
+        self.enc3 = Res3D(C[1], C[2], dropout=dropout*0.5)
+        self.enc4 = Res3D(C[2], C[3], dropout=dropout)
+        self.pool = nn.MaxPool3d(2)
+
+        self.aspp = ASPP3D(C[3], C[4]//2)
+        self.bot  = Res3D(C[4]//2, C[4], dropout=dropout)
+
+        self.up4 = Up3D(C[4], C[3], C[3], dropout=dropout)
+        self.up3 = Up3D(C[3], C[2], C[2], dropout=dropout*0.5)
+        self.up2 = Up3D(C[2], C[1], C[1], dropout=dropout*0.25)
+        self.up1 = Up3D(C[1], C[0], C[0], dropout=0.0)
+
+        self.head = nn.Conv3d(C[0], n_classes, 1)
+        self.deep_supervision = deep_supervision
+        if deep_supervision:
+            self.aux3 = nn.Conv3d(C[2], n_classes, 1)
+            self.aux2 = nn.Conv3d(C[1], n_classes, 1)
+            self.aux1 = nn.Conv3d(C[0], n_classes, 1)
+
+    def forward(self, x):
+        d1 = self.enc1(x)              # 1/1
+        d2 = self.enc2(self.pool(d1))  # 1/2
+        d3 = self.enc3(self.pool(d2))  # 1/4
+        d4 = self.enc4(self.pool(d3))  # 1/8
+        b  = self.aspp(self.pool(d4))  # 1/16
+        b  = self.bot(b)
+        u4 = self.up4(b,  d4)          # 1/8
+        u3 = self.up3(u4, d3)          # 1/4
+        u2 = self.up2(u3, d2)          # 1/2
+        u1 = self.up1(u2, d1)          # 1/1
+        logits = self.head(u1)
+        if self.deep_supervision and self.training:
+            a3 = F.interpolate(self.aux3(u3), size=logits.shape[-3:], mode='trilinear', align_corners=False)
+            a2 = F.interpolate(self.aux2(u2), size=logits.shape[-3:], mode='trilinear', align_corners=False)
+            a1 = self.aux1(u1)
+            return logits + 0.3*a1 + 0.2*a2 + 0.1*a3
+        return logits
+
 
