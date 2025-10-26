@@ -67,7 +67,7 @@ print(f"[INFO] Device: {device}")
 ckpt = torch.load(CKPT_PATH, map_location=device)
 num_classes = ckpt.get('num_classes')
 base_ch     = ckpt.get('base_ch', 32)
-patch_size  = ckpt.get('patch_size', (128,128,128))
+patch_size  = ckpt.get('patch_size', (256,256,128))
 
 # ===== Small robustness: infer num_classes if not stored =====
 if num_classes is None:

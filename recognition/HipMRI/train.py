@@ -33,14 +33,14 @@ LAB_DIR = os.path.join(ROOT, "semantic_labels_only")
 # Hyperparams (tune if needed)
 # ----------------------------
 PATCH_SIZE   = (256, 256, 128)  # crop/pad target volume
-BATCH_SIZE   = 1
-ACCUM_STEPS  = 4
+BATCH_SIZE   = 3
+ACCUM_STEPS  = 1
 BASE_CH      = 32
-NUM_EPOCHS   = 15
+NUM_EPOCHS   = 25
 LR           = 1e-4
 WEIGHT_DECAY = 1e-5
 DROPOUT      = 0.1
-NUM_WORKERS  = 2
+NUM_WORKERS  = 4
 AMP          = torch.cuda.is_available()
 SAVE_PATH    = "unet3d_hipmri_best.pt"
 

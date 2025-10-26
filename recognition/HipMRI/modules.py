@@ -113,7 +113,7 @@ class Up3D(nn.Module):
 # Model
 # ----------------------------
 class ImprovedUNet3D(nn.Module):
-    def __init__(self, in_ch=1, n_classes=6, base=32, dropout=0.1, deep_supervision=False):
+    def __init__(self, in_ch=1, n_classes=6, base=32, dropout=0.1):
         super().__init__()
         C = [base, base*2, base*4, base*8, base*16]
         self.enc1 = Res3D(in_ch, C[0], dropout=0.0)
@@ -131,11 +131,6 @@ class ImprovedUNet3D(nn.Module):
         self.up1 = Up3D(C[1], C[0], C[0], dropout=0.0)
 
         self.head = nn.Conv3d(C[0], n_classes, 1)
-        self.deep_supervision = deep_supervision
-        if deep_supervision:
-            self.aux3 = nn.Conv3d(C[2], n_classes, 1)
-            self.aux2 = nn.Conv3d(C[1], n_classes, 1)
-            self.aux1 = nn.Conv3d(C[0], n_classes, 1)
 
     def forward(self, x):
         d1 = self.enc1(x)              # 1/1
@@ -149,11 +144,6 @@ class ImprovedUNet3D(nn.Module):
         u2 = self.up2(u3, d2)          # 1/2
         u1 = self.up1(u2, d1)          # 1/1
         logits = self.head(u1)
-        if self.deep_supervision and self.training:
-            a3 = F.interpolate(self.aux3(u3), size=logits.shape[-3:], mode='trilinear', align_corners=False)
-            a2 = F.interpolate(self.aux2(u2), size=logits.shape[-3:], mode='trilinear', align_corners=False)
-            a1 = self.aux1(u1)
-            return logits + 0.3*a1 + 0.2*a2 + 0.1*a3
         return logits
 
 # ----------------------------
