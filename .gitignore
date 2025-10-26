@@ -10,5 +10,4 @@ unet3d_hipmri_best.pt
 oldunet3d_hipmri_best.pt
 2dunet.py 
 3dunet.py
-samples/
 test.py
