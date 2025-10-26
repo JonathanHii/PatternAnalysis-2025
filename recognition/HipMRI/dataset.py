@@ -1,15 +1,14 @@
 import os, glob
 from typing import List, Tuple
-
 import numpy as np
 import nibabel as nib
-
 import torch
 import torch.nn.functional as F
+from torch.utils.data import Dataset
 
-# ================================================================
-# Utilities
-# ================================================================
+# ----------------------------
+# I/O + preprocessing utils
+# ----------------------------
 def find_pairs(img_dir: str, lab_dir: str) -> List[Tuple[str, str, str]]:
     """
     Return list of (key, img_path, lab_path)
@@ -18,7 +17,7 @@ def find_pairs(img_dir: str, lab_dir: str) -> List[Tuple[str, str, str]]:
     def key_from(path: str):
         base = os.path.basename(path)
         base = base.replace("_LFOV.nii.gz", "").replace("_SEMANTIC.nii.gz", "")
-        base = base.replace(".nii.gz","").replace(".nii","")
+        base = base.replace(".nii.gz", "").replace(".nii", "")
         return base
 
     imgs = sorted(glob.glob(os.path.join(img_dir, "*_LFOV.nii*")))
@@ -32,7 +31,7 @@ def find_pairs(img_dir: str, lab_dir: str) -> List[Tuple[str, str, str]]:
     print(f"[INFO] Found {len(pairs)} 3D pairs.")
     return pairs
 
-def load_nifti_3d(path: str) -> Tuple[np.ndarray, np.ndarray]:
+def load_nifti_3d(path: str):
     """Return (vol, affine). Squeezes trailing singleton dims."""
     nii = nib.load(path)
     arr = nii.get_fdata(caching='unchanged')
@@ -45,33 +44,45 @@ def zscore(x: np.ndarray, eps=1e-8):
     m, s = x.mean(), x.std()
     return (x - m) / (s + eps)
 
-def pad_or_crop_center(vol: np.ndarray, target: Tuple[int,int,int], pad_val=0) -> np.ndarray:
+def pad_or_crop_center(vol: np.ndarray, target, pad_val=0) -> np.ndarray:
     """Center pad/crop to target shape."""
     z, y, x = vol.shape
     tz, ty, tx = target
     # pad to at least target
     pz = max(tz - z, 0); py = max(ty - y, 0); px = max(tx - x, 0)
     if pz or py or px:
-        vol = np.pad(vol,
-                     ((pz//2, pz - pz//2),
-                      (py//2, py - py//2),
-                      (px//2, px - px//2)),
-                     mode='constant', constant_values=pad_val)
+        vol = np.pad(
+            vol,
+            ((pz//2, pz - pz//2),
+             (py//2, py - py//2),
+             (px//2, px - px//2)),
+            mode='constant', constant_values=pad_val
+        )
     # then crop center
     z, y, x = vol.shape
     cz = (z - tz) // 2; cy = (y - ty) // 2; cx = (x - tx) // 2
     vol = vol[cz:cz+tz, cy:cy+ty, cx:cx+tx]
     return vol
 
-def to_onehot(lbl: torch.Tensor, num_classes: int) -> torch.Tensor:
-    # lbl: (D,H,W) int64 -> (C,D,H,W) float
-    return F.one_hot(lbl.long(), num_classes=num_classes).permute(3,0,1,2).float()
+def dice_per_class(pred_oh: torch.Tensor, tgt_oh: torch.Tensor, eps=1e-6):
+    """
+    Compute per-class Dice, ignoring classes that don't appear in target or prediction.
+    Returns NaN for classes that are completely absent.
+    """
+    p = pred_oh.float().detach()
+    t = tgt_oh.float().detach()
+    inter = (p * t).sum(dim=(0, 2, 3, 4))
+    denom = p.sum(dim=(0, 2, 3, 4)) + t.sum(dim=(0, 2, 3, 4))
+    valid = denom > 0
+    dsc = torch.full_like(inter, float('nan'))
+    dsc[valid] = (2 * inter[valid] + eps) / (denom[valid] + eps)
+    return dsc.cpu().numpy()
 
-# ================================================================
+# ----------------------------
 # Dataset
-# ================================================================
-class HipMRI3DDataset(torch.utils.data.Dataset):
-    def __init__(self, pairs: List[Tuple[str,str,str]], patch_size=(128,128,128), norm=True):
+# ----------------------------
+class HipMRI3DDataset(Dataset):
+    def __init__(self, pairs: List[Tuple[str, str, str]], patch_size=(128,128,128), norm=True):
         self.items = pairs
         self.ps = patch_size
         self.norm = norm
@@ -84,7 +95,8 @@ class HipMRI3DDataset(torch.utils.data.Dataset):
         self.num_classes = int(max(uniq)) + 1
         print(f"[INFO] Detected num_classes={self.num_classes} (from sample labels).")
 
-    def __len__(self): return len(self.items)
+    def __len__(self):
+        return len(self.items)
 
     def __getitem__(self, idx: int):
         key, ip, lp = self.items[idx]
@@ -96,10 +108,11 @@ class HipMRI3DDataset(torch.utils.data.Dataset):
             minz = min(img.shape[0], lab.shape[0])
             miny = min(img.shape[1], lab.shape[1])
             minx = min(img.shape[2], lab.shape[2])
-            img = img[:minz,:miny,:minx]
-            lab = lab[:minz,:miny,:minx]
+            img = img[:minz, :miny, :minx]
+            lab = lab[:minz, :miny, :minx]
 
-        if self.norm: img = zscore(img)
+        if self.norm:
+            img = zscore(img)
         img = pad_or_crop_center(img, self.ps, pad_val=0)
         lab = pad_or_crop_center(lab, self.ps, pad_val=0)
 
