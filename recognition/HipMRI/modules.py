@@ -156,4 +156,26 @@ class ImprovedUNet3D(nn.Module):
             return logits + 0.3*a1 + 0.2*a2 + 0.1*a3
         return logits
 
+# ----------------------------
+# Losses
+# ----------------------------
+class DiceLoss3D(nn.Module):
+    def __init__(self, n_classes, smooth=1e-6):
+        super().__init__()
+        self.n = n_classes
+        self.smooth = smooth
+
+    def forward(self, logits, targets):
+        probs = F.softmax(logits, dim=1)
+        onehot = F.one_hot(targets, num_classes=self.n).permute(0, 4, 1, 2, 3).float()
+
+        inter = (probs * onehot).sum(dim=(0, 2, 3, 4))
+        denom = probs.sum(dim=(0, 2, 3, 4)) + onehot.sum(dim=(0, 2, 3, 4))
+
+        valid = denom > 0  # mask out classes that don't appear
+        dice = torch.zeros_like(inter)
+        dice[valid] = (2 * inter[valid] + self.smooth) / (denom[valid] + self.smooth)
+
+        return 1 - dice[valid].mean()
+
 
