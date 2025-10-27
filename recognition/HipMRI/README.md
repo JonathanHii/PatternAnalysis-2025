@@ -89,6 +89,7 @@ Val DSC: [0.998, 0.987, 0.917, 0.961, 0.862, 0.868]
 ### Validation Performance Over Epochs
 The figure below shows the **Dice Score (DSC)** evolution across 30 epochs for each label.  
 Major structures reached stability early (≈ epoch 10), while finer structures converged gradually between epochs 15–25.
+
 ![Validation Dice Score per Class over Epochs](README_images/dsc%20over%20epochs.png)
 - Increasing the patch size improved spatial context capture and prostate boundary precision.  
 - Setting `num_workers=8` significantly reduced data-loading latency and improved epoch runtime.  
