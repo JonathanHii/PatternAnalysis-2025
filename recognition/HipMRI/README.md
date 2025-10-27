@@ -74,6 +74,7 @@ Training was performed using the following parameters:
 The **Improved UNet3D** integrates residual connections, squeeze-and-excitation (SE) blocks, attention gates, and ASPP modules.  
 The loss function combines **CrossEntropyLoss** and **DiceLoss3D** equally weighted to balance pixel-level and shape-level supervision:
 - $\mathcal{L} = 0.5 \cdot \text{CrossEntropy} + 0.5 \cdot \text{DiceLoss3D}$
+
 **Gradient accumulation** and **mixed precision (AMP)** allowed training large 3D patches efficiently within GPU memory limits.
 
 ### Validation and Testing
