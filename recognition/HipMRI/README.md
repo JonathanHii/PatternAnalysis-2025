@@ -16,8 +16,12 @@ For detailed insights into the original 3D U-Net design and medical imaging appl
   - [Squeeze-and-Excitation (SE) Blocks](#squeeze-and-excitation-se-blocks)
   - [Attention Gates](#attention-gates)
   - [Atrous Spatial Pyramid Pooling (ASPP)](#atrous-spatial-pyramid-pooling-aspp)
+- [Loss and Metrics](#loss-and-metrics)
 - [Training](#training)
+  - [Training Configuration](#training-configuration)
+  - [Validation and Testing](#validation-and-testing)
 - [Training Results](#training-results)
+- [Samples](#samples)
 - [Dependencies](#dependencies)
 - [References](#references)
 
@@ -40,14 +44,31 @@ This repository consists of the following four major files:
 
 ## Model Architecture
 ### Base UNet3D Overview
+The **Improved UNet3D** follows the encoder–decoder design of the classic U-Net, adapted for 3D medical imaging.  
+The encoder captures hierarchical features through downsampling, while the decoder restores spatial resolution via upsampling and skip connections.  
+Channel depth starts at **32** and doubles at each level (32 → 64 → 128 → 256 → 512).  
+An **ASPP** block at the bottleneck aggregates multi-scale context before decoding.
 
 ### Residual Connections
+Each stage uses **residual blocks** (`Res3D`) with two 3D convolutions, **Group Normalization**, and **SiLU** activation.  
+Residual shortcuts improve gradient flow, training stability, and representation depth, allowing the network to learn finer prostate details.
 
 ### Squeeze-and-Excitation (SE) Blocks
+**SE3D** modules adaptively recalibrate channel responses.  
+Global average pooling captures channel statistics, which are used to reweight features via learned attention.  
+This focuses the network on the most informative tissue structures and suppresses noise.
 
 ### Attention Gates
+Decoder **attention gates** refine skip connections by weighting spatial regions based on relevance.  
+Each gate combines encoder and decoder features to generate an attention mask, filtering out irrelevant background and highlighting key anatomical areas for fusion.
 
 ### Atrous Spatial Pyramid Pooling (ASPP)
+The **ASPP3D** module captures multi-scale context using parallel dilated convolutions with rates (1, 2, 4, 6) and a global pooling branch.  
+These are concatenated and projected into a unified feature map, enhancing robustness to prostate size and shape variation.
+
+### Model Diagram
+![model](README_images/modeldiagram.png)
+
 ## Training
 Initially, I tested **different patch sizes** while keeping `batch_size=1` and `num_workers=4` to observe GPU utilization and determine the optimal configuration for my A100 cluster. As illustrated below, GPU usage increased almost linearly with the size of the training patch.  
 After testing, I settled on a patch size of **(256, 256, 128)**, which reached around **72% GPU utilization** on the **NVIDIA A100** without exceeding memory limits. I then increased the number of data-loading workers to **8** (the maximum available cores) to minimize data-loading bottlenecks during training.
@@ -96,9 +117,12 @@ Major structures reached stability early (≈ epoch 10), while finer structures 
 - The Improved UNet3D achieved **high segmentation accuracy**, surpassing the project target of **DSC ≥ 0.7** for all labels.  
 - Smaller structures benefited most from the **attention and ASPP** modules, leading to smoother convergence and improved boundary delineation.
 
+## Training Evaluation
+The Improved UNet3D on the held-out test set, attained Dice scores of `[0.9983, 0.9880, 0.9221, 0.9458, 0.8591, 0.8491]`, all exceeding the 0.7 performance target.
+The model demonstrated strong generalization, accurately segmenting both major and smaller prostate structures, aided by attention, residual, SE, and ASPP modules.
+
 ## Samples
-![Sample1](samples/1.png)
-![Sample2](samples/2.png)
+  ![Sample1](samples/1.png)![Sample2](samples/2.png)
 - The following figures illustrate qualitative segmentation results from the Improved UNet3D model on the Prostate 3D dataset.
 - Each example shows the ground truth label (top row) and the predicted segmentation (bottom row) across three orthogonal MRI planes: axial, coronal, and sagittal.
 - However, in the sagittal slice (x = 96), some label mismatches can be observed - likely caused by overlapping boundaries or low-intensity contrast in the MRI volume.
