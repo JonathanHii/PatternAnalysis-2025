@@ -3,7 +3,6 @@ from typing import List, Tuple
 import numpy as np
 import nibabel as nib
 import torch
-import torch.nn.functional as F
 from torch.utils.data import Dataset
 
 # ----------------------------

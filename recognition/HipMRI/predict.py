@@ -6,8 +6,6 @@ import os
 import numpy as np
 import nibabel as nib
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 import matplotlib.pyplot as plt
 
 from modules import ImprovedUNet3D
