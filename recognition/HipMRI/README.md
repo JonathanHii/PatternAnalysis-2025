@@ -96,9 +96,13 @@ Major structures reached stability early (≈ epoch 10), while finer structures 
 - The Improved UNet3D achieved **high segmentation accuracy**, surpassing the project target of **DSC ≥ 0.7** for all labels.  
 - Smaller structures benefited most from the **attention and ASPP** modules, leading to smoother convergence and improved boundary delineation.
 
-## Training Results
+## Samples
 ![Sample1](samples/1.png)
 ![Sample2](samples/2.png)
+- The following figures illustrate qualitative segmentation results from the Improved UNet3D model on the Prostate 3D dataset.
+- Each example shows the ground truth label (top row) and the predicted segmentation (bottom row) across three orthogonal MRI planes: axial, coronal, and sagittal.
+- However, in the sagittal slice (x = 96), some label mismatches can be observed — likely caused by overlapping boundaries or low-intensity contrast in the MRI volume.
+This indicates that while the model generalizes well, certain regions with complex anatomical intersections or weaker signal clarity may still lead to minor segmentation inconsistencies.
 ## Dependencies
 - Python 3.7+
 - PyTorch 1.10+
