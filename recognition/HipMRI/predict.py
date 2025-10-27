@@ -15,15 +15,15 @@ CKPT_PATH  = "unet3d_hipmri_best.pt"
 IMAGE_PATH = "/home/groups/comp3710/HipMRI_Study_open/semantic_MRs/B006_Week0_LFOV.nii.gz"
 LABEL_PATH = "/home/groups/comp3710/HipMRI_Study_open/semantic_labels_only/B006_Week0_SEMANTIC.nii.gz"  # or None
 
-Z = 30   # axial slice index (None -> center)
-Y = 120  # coronal slice index (None -> center)
-X = 40   # sagittal slice index (None -> center)
+Z = 30   # axial slice index 
+Y = 120  # coronal slice index 
+X = 40   # sagittal slice index 
 
-FORCE_DEVICE = None  # "cpu", "cuda", or None for auto
-# ================================================
+FORCE_DEVICE = None  
 
 # ---------- Utils ----------
 def load_nifti_3d(path: str):
+    """Load 3D NIfTI volume and return array + affine."""
     nii = nib.load(path)
     arr = nii.get_fdata(caching='unchanged')
     if arr.ndim == 4 and arr.shape[-1] == 1:
@@ -31,10 +31,12 @@ def load_nifti_3d(path: str):
     return np.asarray(arr), nii.affine
 
 def zscore(x: np.ndarray, eps=1e-8):
+    """Z-score normalize array."""
     m, s = x.mean(), x.std()
     return (x - m) / (s + eps)
 
 def pad_or_crop_center(vol: np.ndarray, target, pad_val=0):
+    """Pad/crop 3D volume to target shape around center."""
     tz, ty, tx = target
     z, y, x = vol.shape
     # pad to at least target
@@ -51,6 +53,7 @@ def pad_or_crop_center(vol: np.ndarray, target, pad_val=0):
     return vol[cz:cz+tz, cy:cy+ty, cx:cx+tx]
 
 def overlay(ax, base, mask=None, alpha=0.4, title=None):
+    """Show grayscale image with optional mask overlay."""
     ax.imshow(base, cmap='gray')
     if mask is not None:
         ax.imshow(mask, alpha=alpha, interpolation='nearest')
