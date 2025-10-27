@@ -28,7 +28,10 @@ For detailed insights into the original 3D U-Net design and medical imaging appl
 ## Data Set
 The project uses the downsampled Prostate 3D dataset consisting of paired MRI volumes and segmentation masks stored in NIfTI format (`.nii.gz`).  
 Each image–label pair is identified using matching filename keys (`*_LFOV` for MRI, `*_SEMANTIC` for label). 
-
+When loaded via the HipMRI3DDataset class:
+- Volumes are z-score normalized (per subject).
+- Patches are center-cropped or padded to a fixed shape (default: 256×256×128).
+- Labels are converted to `torch.LongTensor` and images to `torch.FloatTensor`.
 Data pairs are automatically matched using the `find_pairs()` utility, which scans the image and label directories and returns valid `(key, image_path, label_path)` tuples.
 
 ## Project Goal
@@ -127,6 +130,15 @@ The model demonstrated strong generalization, accurately segmenting both major a
 - Each example shows the ground truth label (top row) and the predicted segmentation (bottom row) across three orthogonal MRI planes: axial, coronal, and sagittal.
 - However, in the sagittal slice (x = 96), some label mismatches can be observed - likely caused by overlapping boundaries or low-intensity contrast in the MRI volume.
 This indicates that while the model generalizes well, certain regions with complex anatomical intersections or weaker signal clarity may still lead to minor segmentation inconsistencies.
+
+## Run Instructions
+Set dataset paths
+In train.py, edit:
+```ROOT = "/path/to/HipMRI_Study_open"
+IMG_DIR = ROOT/semantic_MRs
+LAB_DIR = ROOT/semantic_labels_only
+```
+(Optional) Adjust hyperparameters
 ## Dependencies
 - Python 3.7+
 - PyTorch 1.10+

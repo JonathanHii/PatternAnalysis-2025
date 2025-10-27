@@ -81,7 +81,7 @@ def dice_per_class(pred_oh: torch.Tensor, tgt_oh: torch.Tensor, eps=1e-6):
 # Dataset
 # ----------------------------
 class HipMRI3DDataset(Dataset):
-    def __init__(self, pairs: List[Tuple[str, str, str]], patch_size=(128,128,128), norm=True):
+    def __init__(self, pairs: List[Tuple[str, str, str]], patch_size=(256,256,128), norm=True):
         self.items = pairs
         self.ps = patch_size
         self.norm = norm
