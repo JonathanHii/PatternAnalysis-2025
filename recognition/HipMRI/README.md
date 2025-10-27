@@ -97,8 +97,8 @@ Major structures reached stability early (≈ epoch 10), while finer structures 
 - Smaller structures benefited most from the **attention and ASPP** modules, leading to smoother convergence and improved boundary delineation.
 
 ## Training Results
-![Sample](samples/B006_Week0_LFOV.nii_viz.png)
-
+![Sample1](samples/1.png)
+![Sample2](samples/2.png)
 ## Dependencies
 - Python 3.7+
 - PyTorch 1.10+
