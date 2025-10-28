@@ -121,7 +121,9 @@ Major structures reached stability early (≈ epoch 10), while finer structures 
 ![Validation Dice Score per Class over Epochs](README_images/dsc%20over%20epochs.png)
 
 The figure below shows that both training and validation losses decrease rapidly during the initial epochs and gradually stabilize after around 10 epochs. This close convergence indicates that the model has learned effectively with minimal overfitting and strong generalization performance.
+
 ![Validation train loss per Class over Epochs](README_images/loss%20over%20epochs.png)
+
 - Increasing the patch size improved spatial context capture and prostate boundary precision.  
 - Setting `num_workers=8` significantly reduced data-loading latency and improved epoch runtime.  
 - The Improved UNet3D achieved **high segmentation accuracy**, surpassing the project target of **DSC ≥ 0.7** for all labels.  
