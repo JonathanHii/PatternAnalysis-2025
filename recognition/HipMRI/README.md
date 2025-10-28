@@ -16,12 +16,16 @@ For detailed insights into the original 3D U-Net design and medical imaging appl
   - [Squeeze-and-Excitation (SE) Blocks](#squeeze-and-excitation-se-blocks)
   - [Attention Gates](#attention-gates)
   - [Atrous Spatial Pyramid Pooling (ASPP)](#atrous-spatial-pyramid-pooling-aspp)
-- [Loss and Metrics](#loss-and-metrics)
+  - [Model Diagram](#model-diagram)
 - [Training](#training)
   - [Training Configuration](#training-configuration)
   - [Validation and Testing](#validation-and-testing)
+  - [Validation Performance Over Epochs](#validation-performance-over-epochs)
 - [Training Results](#training-results)
 - [Samples](#samples)
+  - [Sample 1](#sample-1)
+  - [Sample 2](#sample-2)
+- [Run Instructions](#run-instructions)
 - [Dependencies](#dependencies)
 - [References](#references)
 
@@ -120,16 +124,21 @@ Major structures reached stability early (≈ epoch 10), while finer structures 
 - The Improved UNet3D achieved **high segmentation accuracy**, surpassing the project target of **DSC ≥ 0.7** for all labels.  
 - Smaller structures benefited most from the **attention and ASPP** modules, leading to smoother convergence and improved boundary delineation.
 
-## Training Evaluation
+## Training Results
 The Improved UNet3D on the held-out test set, attained Dice scores of `[0.9983, 0.9880, 0.9221, 0.9458, 0.8591, 0.8491]`, all exceeding the 0.7 performance target.
 The model demonstrated strong generalization, accurately segmenting both major and smaller prostate structures, aided by attention, residual, SE, and ASPP modules.
 
 ## Samples
-  ![Sample1](samples/1.png)![Sample2](samples/2.png)
 - The following figures illustrate qualitative segmentation results from the Improved UNet3D model on the Prostate 3D dataset.
 - Each example shows the ground truth label (top row) and the predicted segmentation (bottom row) across three orthogonal MRI planes: axial, coronal, and sagittal.
-- However, in the sagittal slice (x = 96), some label mismatches can be observed - likely caused by overlapping boundaries or low-intensity contrast in the MRI volume.
-This indicates that while the model generalizes well, certain regions with complex anatomical intersections or weaker signal clarity may still lead to minor segmentation inconsistencies.
+### Sample 1
+![Sample1](samples/1.png)
+* Axial: 128, Coronal: 128, Sagittal: 48
+* Observation: Overall segmentation is good, with clear boundaries and consistent label continuity across the three planes.
+### Sample 2
+![Sample2](samples/2.png)
+* Axial: 192, Coronal: 192, Sagittal: 96
+* Observation: Overall segmentation is strong. There are a few minor label mismatches noted in the saggital plane, but they do not materially affect the overall quality.
 
 ## Run Instructions
 Set dataset paths
